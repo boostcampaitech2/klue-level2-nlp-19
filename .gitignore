@@ -154,4 +154,3 @@ dataset/
 
 wandb/
 train_dh-inference.py
-train_dh.py

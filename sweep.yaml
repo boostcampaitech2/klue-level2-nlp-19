@@ -1,5 +1,5 @@
-program: train_dh.py
-name: klue-roberta-test
+program: train.py
+name: name
 method: grid
 metric:
   name: eval/micro f1 score

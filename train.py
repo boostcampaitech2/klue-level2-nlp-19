@@ -68,8 +68,8 @@ def label_to_num(label):
 
 def train(args):
   # load model and tokenizer
-  # MODEL_NAME = "monologg/koelectra-base-v3-discriminator"
-  MODEL_NAME = "klue/roberta-base"
+  MODEL_NAME = "monologg/koelectra-base-v3-discriminator"
+  # MODEL_NAME = "klue/roberta-base"
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
   # load dataset
