@@ -68,8 +68,8 @@ def label_to_num(label):
 
 def train(args):
   # load model and tokenizer
-  # MODEL_NAME = "bert-base-uncased"
-  MODEL_NAME = "klue/bert-base"
+  # MODEL_NAME = "monologg/koelectra-base-v3-discriminator"
+  MODEL_NAME = "klue/roberta-base"
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
   # load dataset
@@ -121,7 +121,7 @@ def train(args):
     eval_steps = 500,            # evaluation step.
     load_best_model_at_end = True,
     report_to="wandb",
-    run_name= f"{MODEL_NAME.split('/')[-1]}-epoch{args.epoch}-batch{args.batch_size}-weightdecay{args.weight_decay}-learningrate{args.learning_rate}"
+    run_name= f"{MODEL_NAME.split('/')[-1]}-epoch{args.epoch}-batch{args.batch_size}-wd{args.weight_decay}-lr{args.learning_rate}"
   )
 
   trainer = Trainer(
