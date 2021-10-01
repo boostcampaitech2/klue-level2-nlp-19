@@ -1,4 +1,5 @@
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments
+from tokenization import BertTokenizer
 from torch.utils.data import DataLoader
 from load_data import *
 import pandas as pd
@@ -9,6 +10,10 @@ import pickle as pickle
 import numpy as np
 import argparse
 from tqdm import tqdm
+
+from tokenizer.sentencepiece import SentencePieceTokenizer
+from tokenizer.mecab import MeCabTokenizer
+from tokenizer.mecab_sp import MeCabSentencePieceTokenizer
 
 def inference(model, tokenized_sent, device):
   """
@@ -66,11 +71,18 @@ def main(args):
   device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
   # load tokenizer
   Tokenizer_NAME = "klue/bert-base"
-  tokenizer = AutoTokenizer.from_pretrained(Tokenizer_NAME)
+  #tokenizer = AutoTokenizer.from_pretrained(Tokenizer_NAME)
+
+  tokenizer_dir = os.path.join("./resources", "mecab_sp-64k")
+  mecab = MeCabTokenizer(os.path.join(tokenizer_dir, "tok.json")) 
+  sp = SentencePieceTokenizer(os.path.join(tokenizer_dir, "tok.model"))
+  custom_tokenizer = MeCabSentencePieceTokenizer(mecab, sp)
+  tokenizer = BertTokenizer(os.path.join(tokenizer_dir, "tok.vocab.txt"), custom_tokenizer)
 
   ## load my model
   MODEL_NAME = args.model_dir # model dir.
   model = AutoModelForSequenceClassification.from_pretrained(args.model_dir)
+  model.resize_token_embeddings(tokenizer.vocab_size)
   model.parameters
   model.to(device)
 
@@ -95,7 +107,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   
   # model dir
-  parser.add_argument('--model_dir', type=str, default="./best_model")
+  parser.add_argument('--model_dir', type=str, default="./results/checkpoint-2000")
   args = parser.parse_args()
   print(args)
   main(args)

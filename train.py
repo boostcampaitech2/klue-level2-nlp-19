@@ -6,9 +6,13 @@ import sklearn
 import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 from sklearn.model_selection import train_test_split
-from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
+from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification
+from tokenization import BertTokenizer
 from load_data import *
-
+from tokenizer.sentencepiece import SentencePieceTokenizer
+from tokenizer.mecab import MeCabTokenizer
+from tokenizer.mecab_sp import MeCabSentencePieceTokenizer
+import wandb
 
 # fix random seeds for reproducibility
 SEED = 1004
@@ -78,7 +82,13 @@ def train():
   # load model and tokenizer
   # MODEL_NAME = "bert-base-uncased"
   MODEL_NAME = "klue/bert-base"
-  tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+  #tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+  tokenizer_dir = os.path.join("./resources", "mecab_sp-64k")
+  mecab = MeCabTokenizer(os.path.join(tokenizer_dir, "tok.json")) 
+  sp = SentencePieceTokenizer(os.path.join(tokenizer_dir, "tok.model"))
+  custom_tokenizer = MeCabSentencePieceTokenizer(mecab, sp)
+  tokenizer = BertTokenizer(os.path.join(tokenizer_dir, "tok.vocab.txt"), custom_tokenizer)
+
 
   # load dataset
   total_dataset = load_data("../dataset/train/train.csv")
@@ -105,8 +115,10 @@ def train():
 
   model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
   # print(model.config)
-  # wandb.init(project="NLPproject", entity="chuchanghan")
-  # wandb.init(project="NLPproject", config=model.config, name="BERT_10epoch_64batch")
+  wandb.init(project="NLPproject", entity="chuchanghan")
+  wandb.init(project="NLPproject", config=model.config, name="BERT_10epoch_64batch_mecab-sp")
+
+  model.resize_token_embeddings(tokenizer.vocab_size)
   model.parameters
   model.to(device)
   
@@ -129,7 +141,8 @@ def train():
                                 # `steps`: Evaluate every `eval_steps`.
                                 # `epoch`: Evaluate every end of epoch.
     eval_steps = 500,            # evaluation step.
-    load_best_model_at_end = True
+    load_best_model_at_end = True,
+    report_to="wandb"
   )
   trainer = Trainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
@@ -142,7 +155,7 @@ def train():
   # train model
   trainer.train()
   model.save_pretrained('./best_model')
-  # wandb.finish()
+  wandb.finish()
 def main():
   train()
 

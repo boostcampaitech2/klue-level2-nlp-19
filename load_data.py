@@ -45,6 +45,8 @@ def tokenized_dataset(dataset, tokenizer):
     temp = ''
     temp = e01 + '[SEP]' + e02
     concat_entity.append(temp)
+
+
   tokenized_sentences = tokenizer(
       concat_entity,
       list(dataset['sentence']),
