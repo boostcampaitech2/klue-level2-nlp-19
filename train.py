@@ -73,7 +73,7 @@ def train(args):
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
   # load dataset
-  train_data = load_data("../dataset/train/train.csv")
+  train_data = load_data("../dataset/train/newTrain.csv")
   train_dataset, dev_dataset = train_test_split(train_data, stratify= train_data.label, test_size= 0.1, random_state=1004)
 
   train_label = label_to_num(train_dataset['label'].values)
