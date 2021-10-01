@@ -1,0 +1,15 @@
+program: train.py
+name: name
+method: grid
+metric:
+  name: eval/micro f1 score
+  goal: maximize
+parameters:
+  learning_rate:
+    values: [1e-5,5e-5]
+  batch_size:
+    values: [16, 64]
+  epoch:
+    value: 10
+  weight_decay:
+    values: [0.01, 0.05]
