@@ -72,9 +72,17 @@ def train(args):
   # MODEL_NAME = "klue/roberta-base"
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
+  # Augmentation 통해서 추가된 데이터입니다.
+  add_data = load_data("../dataset/train/addDataset.csv")
+  add_train, add_dev = train_test_split(add_data, stratify= add_data.label, test_size= 0.1, random_state=1004)
+
   # load dataset
   train_data = load_data("../dataset/train/train.csv")
   train_dataset, dev_dataset = train_test_split(train_data, stratify= train_data.label, test_size= 0.1, random_state=1004)
+
+  # 기본 데이터셋에 Augmentation된 내용 추가
+  train_data = train_data.append(add_train, ignore_index=True)
+  # dev_dataset = dev_dataset.append(add_dev, ignore_index=True)
 
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
