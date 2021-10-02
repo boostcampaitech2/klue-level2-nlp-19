@@ -82,7 +82,7 @@ def train(args):
 
   # 기본 데이터셋에 Augmentation된 내용 추가
   train_data = train_data.append(add_train, ignore_index=True)
-  dev_dataset = dev_dataset.append(add_dev, ignore_index=True)
+  # dev_dataset = dev_dataset.append(add_dev, ignore_index=True)
 
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
