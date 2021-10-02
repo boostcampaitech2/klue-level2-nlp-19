@@ -68,7 +68,7 @@ def label_to_num(label):
 
 def train(args):
   # load model and tokenizer
-  MODEL_NAME = "monologg/koelectra-base-v3-discriminator"
+  MODEL_NAME = "klue/roberta-large"
   # MODEL_NAME = "klue/roberta-base"
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
@@ -112,6 +112,7 @@ def train(args):
     per_device_eval_batch_size=args.batch_size,   # batch size for evaluation
     warmup_steps=500,                # number of warmup steps for learning rate scheduler
     weight_decay=args.weight_decay,               # strength of weight decay
+    gradient_accumulation_steps=args.accumul,
     logging_dir='./logs',            # directory for storing logs
     logging_steps=100,              # log saving step.
     evaluation_strategy='steps', # evaluation strategy to adopt during training
@@ -121,7 +122,7 @@ def train(args):
     eval_steps = 500,            # evaluation step.
     load_best_model_at_end = True,
     report_to="wandb",
-    run_name= f"{MODEL_NAME.split('/')[-1]}-epoch{args.epoch}-batch{args.batch_size}-wd{args.weight_decay}-lr{args.learning_rate}"
+    run_name= f"{MODEL_NAME.split('/')[-1]}-epoch{args.epoch}-batch{args.batch_size}-wd{args.weight_decay}-lr{args.learning_rate}-accuml{args.accumul}"
   )
 
   trainer = Trainer(
@@ -139,10 +140,11 @@ def train(args):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
 
-  parser.add_argument('--epoch', type=int, default=10, help='number of epochs to train (default: 10)')
+  parser.add_argument('--epoch', type=int, default=4, help='number of epochs to train (default: 4)')
   parser.add_argument('--batch_size', type=int, default=64, help='size of batchs to train (default: 64)')
   parser.add_argument('--weight_decay', type=float, default=0.01, help='weight decay to train (default: 0.01)')
   parser.add_argument('--learning_rate', type=float, default=0.00001, help='learning rate to train (default: 1e-5)')
+  parser.add_argument('--accumul', type=int, default=0, help='accumulation step to train (default: 0)')
   args = parser.parse_args()
 
   # main()
