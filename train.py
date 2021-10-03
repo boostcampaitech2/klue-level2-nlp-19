@@ -1,13 +1,15 @@
 import pickle as pickle
 import os
 import pandas as pd
+from pandas import DataFrame
 import torch
 import sklearn
 import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification
-from tokenization import BertTokenizer
+from transformers import BertForPreTraining, BertForSequenceClassification, BertConfig
+from tokenization import BertTokenizer    # 현재 디렉토리내에 정의된 클래스
 from load_data import *
 from tokenizer.sentencepiece import SentencePieceTokenizer
 from tokenizer.mecab import MeCabTokenizer
@@ -52,6 +54,7 @@ def klue_re_auprc(probs, labels):
         score[c] = sklearn.metrics.auc(recall, precision)
     return np.average(score) * 100.0
 
+count = 0
 def compute_metrics(pred):
   """ validation을 위한 metrics function """
   labels = pred.label_ids
@@ -63,10 +66,24 @@ def compute_metrics(pred):
   auprc = klue_re_auprc(probs, labels)
   acc = accuracy_score(labels, preds) # 리더보드 평가에는 포함되지 않습니다.
 
+  metric_submission = {'output': preds, 'target':  labels}
+
+  ## dict -> data frame 변환
+  metric_submission = DataFrame(metric_submission)
+
+  ## csv 파일로 저장
+  global count
+  count += 1
+  if count % 4 == 0:
+    step = count/4
+    save_name = '{}_metric_valid{}'.format("bert", step)
+    save_path = os.path.join("../dataset/metric", f'submission_{save_name}.csv')
+    metric_submission.to_csv(save_path, index=False)
+
   return {
       'micro f1 score': f1,
       'auprc' : auprc,
-      'accuracy': acc,
+      'accuracy': acc
   }
 
 def label_to_num(label):
@@ -81,7 +98,8 @@ def label_to_num(label):
 def train():
   # load model and tokenizer
   # MODEL_NAME = "bert-base-uncased"
-  MODEL_NAME = "klue/bert-base"
+  # MODEL_NAME = "klue/bert-base"
+  MODEL_NAME = "bert-base-uncased"
   #tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
   tokenizer_dir = os.path.join("./resources", "mecab_sp-64k")
   mecab = MeCabTokenizer(os.path.join(tokenizer_dir, "tok.json")) 
@@ -110,13 +128,12 @@ def train():
 
   print(device)
   # setting model hyperparameter
-  model_config =  AutoConfig.from_pretrained(MODEL_NAME)
+  model_config =  BertConfig.from_pretrained(MODEL_NAME)
   model_config.num_labels = 30
-
-  model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
+  model =  BertForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
   # print(model.config)
   wandb.init(project="NLPproject", entity="chuchanghan")
-  wandb.init(project="NLPproject", config=model.config, name="BERT_10epoch_64batch_mecab-sp")
+  wandb.init(project="NLPproject", config=model.config, name="BERT_10epoch_64batch_mecab-sp64")
 
   model.resize_token_embeddings(tokenizer.vocab_size)
   model.parameters
@@ -132,7 +149,7 @@ def train():
     learning_rate=5e-5,               # learning_rate
     per_device_train_batch_size=64,  # batch size per device during training
     per_device_eval_batch_size=64,   # batch size for evaluation
-    warmup_steps=500,                # number of warmup steps for learning rate scheduler
+    warmup_steps=5000,                # number of warmup steps for learning rate scheduler
     weight_decay=0.01,               # strength of weight decay
     logging_dir='./logs',            # directory for storing logs
     logging_steps=100,              # log saving step.
