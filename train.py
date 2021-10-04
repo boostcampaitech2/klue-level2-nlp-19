@@ -6,9 +6,12 @@ import sklearn
 import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
+from transformers.trainer_utils import SchedulerType
+from transformers.utils.dummy_pt_objects import get_cosine_with_hard_restarts_schedule_with_warmup
 from load_data import *
 from sklearn.model_selection import train_test_split
 import argparse
+from transformers.optimization import get_cosine_with_hard_restarts_schedule_with_warmup
 
 def klue_re_micro_f1(preds, labels):
     """KLUE-RE micro f1 (except no_relation)"""
@@ -104,7 +107,8 @@ def train(args):
   # setting model hyperparameter
   model_config =  AutoConfig.from_pretrained(MODEL_NAME)
   model_config.num_labels = 30
-
+  # model_config.dropout = 
+  # model_config.
   model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
   print(model.config)
   model.parameters
@@ -121,9 +125,10 @@ def train(args):
     learning_rate=args.learning_rate,               # learning_rate
     per_device_train_batch_size=args.batch_size,  # batch size per device during training
     per_device_eval_batch_size=args.batch_size,   # batch size for evaluation
-    warmup_steps=500,                # number of warmup steps for learning rate scheduler
+    warmup_steps=0,                # number of warmup steps for learning rate scheduler
     weight_decay=args.weight_decay,               # strength of weight decay
     gradient_accumulation_steps=args.accumul,
+    lr_scheduler_type=args.scheduler,
     logging_dir='./logs',            # directory for storing logs
     logging_steps=100,              # log saving step.
     evaluation_strategy='steps', # evaluation strategy to adopt during training
@@ -133,7 +138,7 @@ def train(args):
     eval_steps = 500,            # evaluation step.
     load_best_model_at_end = True,
     report_to="wandb",
-    run_name= f"{MODEL_NAME.split('/')[-1]}-epoch{args.epoch}-batch{args.batch_size}-wd{args.weight_decay}-lr{args.learning_rate}-accuml{args.accumul}"
+    run_name= f"{MODEL_NAME.split('/')[-1]}-scheduler[{args.scheduler}]-epoch{args.epoch}-batch{args.batch_size}-wd{args.weight_decay}-lr{args.learning_rate}-accuml{args.accumul}"
   )
 
   trainer = Trainer(
@@ -144,6 +149,12 @@ def train(args):
     compute_metrics=compute_metrics         # define metrics function
   )
 
+  if args.scheduler == 'cosine_with_restarts':
+    steps = (train_dataset.shape[0]//args.batch_size)*args.epoch
+    print('you choose cosine with restart')
+    optim = trainer.create_optimizer()
+    trainer.lr_scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(optimizer=optim,num_warmup_steps=0, num_training_steps=steps, num_cycles = 2)
+  
   # train model
   trainer.train()
   model.save_pretrained('./best_model')
@@ -155,7 +166,8 @@ if __name__ == '__main__':
   parser.add_argument('--batch_size', type=int, default=64, help='size of batchs to train (default: 64)')
   parser.add_argument('--weight_decay', type=float, default=0.01, help='weight decay to train (default: 0.01)')
   parser.add_argument('--learning_rate', type=float, default=0.00001, help='learning rate to train (default: 1e-5)')
-  parser.add_argument('--accumul', type=int, default=1, help='accumulation step to train (default: 0)')
+  parser.add_argument('--accumul', type=int, default=1, help='scheduler to train (default: linear)')
+  parser.add_argument('--scheduler', type=str, default="linear", help='accumulation step to train (default: 0)')
   args = parser.parse_args()
 
   # main()
