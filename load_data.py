@@ -41,6 +41,8 @@ def load_data(dataset_dir):
 def tokenized_dataset(dataset, tokenizer):
   """ tokenizer에 따라 sentence를 tokenizing 합니다."""
   concat_entity = []
+  # if dataset['ob_type'] in dataset.columns :
+        
   for e01, e02 in zip(dataset['subject_entity'], dataset['object_entity']):
     temp = ''
     temp = e01 + '[SEP]' + e02
@@ -60,6 +62,34 @@ def tokenized_dataset(dataset, tokenizer):
     tokenized_sentences = tokenizer(
         concat_entity,
         list(dataset['sentence']),
+        return_tensors="pt",
+        padding=True,
+        truncation=True,
+        max_length=256,
+        add_special_tokens=True
+        )
+  return tokenized_sentences
+
+def marker_tokenized_dataset(dataset, tokenizer):
+  """ tokenizer에 따라 sentence를 tokenizing 합니다."""
+
+  # if dataset['ob_type'] in dataset.columns :
+  
+  # if "roberta" in tokenizer.name_or_path:
+  #   tokenized_sentence=[]
+  if "roberta" in tokenizer.name_or_path:
+    tokenized_sentences = tokenizer(
+        dataset,
+        return_tensors="pt",
+        padding=True,
+        truncation=True,
+        max_length=256,
+        add_special_tokens=True,
+        return_token_type_ids=False
+        )
+  else:
+    tokenized_sentences = tokenizer(
+        dataset,
         return_tensors="pt",
         padding=True,
         truncation=True,
