@@ -154,3 +154,6 @@ dataset/
 
 wandb/
 train_dh-inference.py
+sweep_test.yaml
+train_test.py
+lstm_train.py

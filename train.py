@@ -72,17 +72,20 @@ def train(args):
   # MODEL_NAME = "klue/roberta-base"
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
-  # Augmentation 통해서 추가된 데이터입니다.
-  add_data = load_data("../dataset/train/addDataset.csv")
-  add_train, add_dev = train_test_split(add_data, stratify= add_data.label, test_size= 0.1, random_state=1004)
+  # # Augmentation 통해서 추가된 데이터입니다.
+  # add_data = load_data("../dataset/train/addDataset.csv")
+  # add_train, add_dev = train_test_split(add_data, stratify= add_data.label, test_size= 0.1, random_state=1004)
 
-  # load dataset
-  train_data = load_data("../dataset/train/train.csv")
-  train_dataset, dev_dataset = train_test_split(train_data, stratify= train_data.label, test_size= 0.1, random_state=1004)
+  # # load dataset
+  # train_data = load_data("../dataset/train/train.csv")
+  # train_dataset, dev_dataset = train_test_split(train_data, stratify= train_data.label, test_size= 0.1, random_state=1004)
 
-  # 기본 데이터셋에 Augmentation된 내용 추가
-  train_data = train_data.append(add_train, ignore_index=True)
-  # dev_dataset = dev_dataset.append(add_dev, ignore_index=True)
+  # # 기본 데이터셋에 Augmentation된 내용 추가
+  # train_data = train_data.append(add_train, ignore_index=True)
+  # # dev_dataset = dev_dataset.append(add_dev, ignore_index=True)
+  
+  train_dataset = load_data("./new_dataset/train.csv")
+  dev_dataset = load_data("./new_dataset/dev.csv")
 
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
@@ -152,7 +155,7 @@ if __name__ == '__main__':
   parser.add_argument('--batch_size', type=int, default=64, help='size of batchs to train (default: 64)')
   parser.add_argument('--weight_decay', type=float, default=0.01, help='weight decay to train (default: 0.01)')
   parser.add_argument('--learning_rate', type=float, default=0.00001, help='learning rate to train (default: 1e-5)')
-  parser.add_argument('--accumul', type=int, default=0, help='accumulation step to train (default: 0)')
+  parser.add_argument('--accumul', type=int, default=1, help='accumulation step to train (default: 0)')
   args = parser.parse_args()
 
   # main()
