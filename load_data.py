@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import torch
 import numpy as np
-
+from entity_marker import *
 class RE_Dataset(torch.utils.data.Dataset):
   """ Dataset 구성을 위한 class."""
   def __init__(self, pair_dataset, labels):
@@ -78,6 +78,11 @@ def marker_tokenized_dataset(dataset, tokenizer):
   
   # if "roberta" in tokenizer.name_or_path:
   #   tokenized_sentence=[]
+  
+  # abcd=0
+  # 2/abcd
+  dataset = add_entity_mark(dataset)
+  print('add_entity_mark')
   if "roberta" in tokenizer.name_or_path:
     tokenized_sentences = tokenizer(
         dataset,
