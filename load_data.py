@@ -2,7 +2,9 @@ import pickle as pickle
 import os
 import pandas as pd
 import torch
+import numpy as np
 
+from entity_marker import *
 
 class RE_Dataset(torch.utils.data.Dataset):
   """ Dataset 구성을 위한 class."""
@@ -13,6 +15,7 @@ class RE_Dataset(torch.utils.data.Dataset):
   def __getitem__(self, idx):
     item = {key: val[idx].clone().detach() for key, val in self.pair_dataset.items()}
     item['labels'] = torch.tensor(self.labels[idx])
+    
     return item
 
   def __len__(self):
@@ -28,7 +31,9 @@ def preprocessing_dataset(dataset):
  
     subject_entity.append(i)
     object_entity.append(j)
-  out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':dataset['sentence'],'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
+  index = np.arange(len(dataset))
+  out_dataset = pd.DataFrame({'index' : index,'id':dataset['id'], 'sentence':dataset['sentence'],'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
+  
   return out_dataset
 
 def load_data(dataset_dir):
@@ -41,6 +46,7 @@ def load_data(dataset_dir):
 def tokenized_dataset(dataset, tokenizer):
   """ tokenizer에 따라 sentence를 tokenizing 합니다."""
   concat_entity = []
+  # if dataset['ob_type'] in dataset.columns :   
   for e01, e02 in zip(dataset['subject_entity'], dataset['object_entity']):
     temp = ''
     temp = e01 + '[SEP]' + e02
@@ -66,4 +72,38 @@ def tokenized_dataset(dataset, tokenizer):
         max_length=256,
         add_special_tokens=True
         )
+
+  return tokenized_sentences
+
+def marker_tokenized_dataset(dataset, tokenizer):
+  """ tokenizer에 따라 sentence를 tokenizing 합니다."""
+  # if dataset['ob_type'] in dataset.columns :
+
+  # if "roberta" in tokenizer.name_or_path:
+  #   tokenized_sentence=[]
+
+  # abcd=0
+  # 2/abcd
+  dataset = add_entity_mark(dataset)
+  print('add_entity_mark')
+  if "roberta" in tokenizer.name_or_path:
+    tokenized_sentences = tokenizer(
+        dataset,
+        return_tensors="pt",
+        padding=True,
+        truncation=True,
+        max_length=256,
+        add_special_tokens=True,
+        return_token_type_ids=False
+        )
+  else:
+    tokenized_sentences = tokenizer(
+        dataset,
+        return_tensors="pt",
+        padding=True,
+        truncation=True,
+        max_length=256,
+        add_special_tokens=True
+        )
+        
   return tokenized_sentences
