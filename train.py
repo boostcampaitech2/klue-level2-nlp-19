@@ -8,6 +8,7 @@ from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_sc
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
 from load_data import *
 from sklearn.model_selection import train_test_split
+from entity_marker import *
 import argparse
 
 def klue_re_micro_f1(preds, labels):
@@ -87,9 +88,20 @@ def train(args):
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
 
+  #  Entity marker
+  # Example
+  if args.entity_marker : 
+    marked_train_dataset = load_data_marker("../dataset/train/train.csv")
+    marked_dev_dataset = load_data_marker("../dataset/train/dev.csv")
+    concated_train_dataset=concat_entity_idx(train_dataset,marked_train_dataset)
+    concated_dev_dataset=concat_entity_idx(dev_dataset,marked_dev_dataset)
+    tokenized_train = marker_tokenized_dataset(concated_train_dataset,tokenizer)
+    tokenized_dev = marker_tokenized_dataset(concated_dev_dataset,tokenizer)
+
   # tokenizing dataset
-  tokenized_train = tokenized_dataset(train_dataset, tokenizer)
-  tokenized_dev = tokenized_dataset(dev_dataset, tokenizer)
+  else:
+    tokenized_train = tokenized_dataset(train_dataset, tokenizer)
+    tokenized_dev = tokenized_dataset(dev_dataset, tokenizer)
 
   # make dataset for pytorch.
   RE_train_dataset = RE_Dataset(tokenized_train, train_label)
@@ -151,6 +163,8 @@ if __name__ == '__main__':
   parser.add_argument('--batch_size', type=int, default=64, help='size of batchs to train (default: 64)')
   parser.add_argument('--weight_decay', type=float, default=0.01, help='weight decay to train (default: 0.01)')
   parser.add_argument('--learning_rate', type=float, default=0.00001, help='learning rate to train (default: 1e-5)')
+
+  parser.add_argument('--entity_marker',default=False, help='entity marker option')
   args = parser.parse_args()
 
   # main()
