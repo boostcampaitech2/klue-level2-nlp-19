@@ -1,0 +1,24 @@
+{
+    "os": "Linux-4.4.0-59-generic-x86_64-with-glibc2.10",
+    "python": "3.8.5",
+    "heartbeatAt": "2021-10-05T15:25:35.696445",
+    "startedAt": "2021-10-05T15:25:32.858818",
+    "docker": null,
+    "gpu": "Tesla V100-PCIE-32GB",
+    "gpu_count": 1,
+    "cpu_count": 8,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "train.py",
+    "codePath": "train.py",
+    "git": {
+        "remote": "git@github.com:boostcampaitech2/klue-level2-nlp-19.git",
+        "commit": "ebb407e23670556c89f3127e7cc22b3ba4f2cd28"
+    },
+    "email": null,
+    "root": "/opt/ml/klue-level2-nlp-19",
+    "host": "ddfab34a1b2a",
+    "username": "root",
+    "executable": "/opt/conda/bin/python"
+}
