@@ -3,7 +3,10 @@ import torch.nn as nn
 from torch.nn import *
 from transformers import AutoModel
 from transformers.modeling_outputs import SequenceClassifierOutput
+<<<<<<< HEAD
 
+=======
+>>>>>>> 1c08bfae067e8d9d2b6b75fd6b96d5980f8a74ea
 class SimpleModel(nn.Module) :
   def __init__(self,MODEL_NAME,config):
     super().__init__()
@@ -94,4 +97,8 @@ class SimpleModel(nn.Module) :
       logits=logits,
       hidden_states=outputs.hidden_states,
       attentions=outputs.attentions,
+<<<<<<< HEAD
     )
+=======
+    )
+>>>>>>> 1c08bfae067e8d9d2b6b75fd6b96d5980f8a74ea

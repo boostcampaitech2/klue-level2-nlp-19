@@ -91,8 +91,13 @@ def train(args):
   #  Entity marker
   # Example
   if args.entity_marker : 
+<<<<<<< HEAD
     marked_train_dataset = load_data_marker("./new_dataset/train.csv")
     marked_dev_dataset = load_data_marker("./new_dataset/dev.csv")
+=======
+    marked_train_dataset = load_data_marker("../dataset/train/train.csv")
+    marked_dev_dataset = load_data_marker("../dataset/train/dev.csv")
+>>>>>>> 1c08bfae067e8d9d2b6b75fd6b96d5980f8a74ea
     concated_train_dataset=concat_entity_idx(train_dataset,marked_train_dataset)
     concated_dev_dataset=concat_entity_idx(dev_dataset,marked_dev_dataset)
     tokenized_train = marker_tokenized_dataset(concated_train_dataset,tokenizer)

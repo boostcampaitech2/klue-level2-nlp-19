@@ -3,9 +3,13 @@ import os
 import pandas as pd
 import torch
 import numpy as np
+<<<<<<< HEAD
 
 from entity_marker import *
 
+=======
+from entity_marker import *
+>>>>>>> 1c08bfae067e8d9d2b6b75fd6b96d5980f8a74ea
 class RE_Dataset(torch.utils.data.Dataset):
   """ Dataset 구성을 위한 class."""
   def __init__(self, pair_dataset, labels):
@@ -33,7 +37,10 @@ def preprocessing_dataset(dataset):
     object_entity.append(j)
   index = np.arange(len(dataset))
   out_dataset = pd.DataFrame({'index' : index,'id':dataset['id'], 'sentence':dataset['sentence'],'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
+<<<<<<< HEAD
   
+=======
+>>>>>>> 1c08bfae067e8d9d2b6b75fd6b96d5980f8a74ea
   return out_dataset
 
 def load_data(dataset_dir):
@@ -46,7 +53,12 @@ def load_data(dataset_dir):
 def tokenized_dataset(dataset, tokenizer):
   """ tokenizer에 따라 sentence를 tokenizing 합니다."""
   concat_entity = []
+<<<<<<< HEAD
   # if dataset['ob_type'] in dataset.columns :   
+=======
+  # if dataset['ob_type'] in dataset.columns :
+        
+>>>>>>> 1c08bfae067e8d9d2b6b75fd6b96d5980f8a74ea
   for e01, e02 in zip(dataset['subject_entity'], dataset['object_entity']):
     temp = ''
     temp = e01 + '[SEP]' + e02
@@ -77,11 +89,20 @@ def tokenized_dataset(dataset, tokenizer):
 
 def marker_tokenized_dataset(dataset, tokenizer):
   """ tokenizer에 따라 sentence를 tokenizing 합니다."""
+<<<<<<< HEAD
   # if dataset['ob_type'] in dataset.columns :
 
   # if "roberta" in tokenizer.name_or_path:
   #   tokenized_sentence=[]
 
+=======
+
+  # if dataset['ob_type'] in dataset.columns :
+  
+  # if "roberta" in tokenizer.name_or_path:
+  #   tokenized_sentence=[]
+  
+>>>>>>> 1c08bfae067e8d9d2b6b75fd6b96d5980f8a74ea
   # abcd=0
   # 2/abcd
   dataset = add_entity_mark(dataset)
@@ -105,5 +126,9 @@ def marker_tokenized_dataset(dataset, tokenizer):
         max_length=256,
         add_special_tokens=True
         )
+<<<<<<< HEAD
         
   return tokenized_sentences
+=======
+  return tokenized_sentences
+>>>>>>> 1c08bfae067e8d9d2b6b75fd6b96d5980f8a74ea
