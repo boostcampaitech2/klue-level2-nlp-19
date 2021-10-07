@@ -1,0 +1,25 @@
+program: train-wandb.py
+method: bayes
+metric:
+  goal: minimize
+  name: train/train_loss
+parameters: 
+  per_device_train_batch_size:
+    max: 64
+    min: 16
+    distribution: int_uniform
+  gradient_accumulation_steps:
+    max: 4
+    min: 1
+    distribution: int_uniform
+  per_device_eval_batch_size :
+    max: 64
+    min: 16
+    distribution: int_uniform
+  num_train_epochs :
+    max: 4
+    min: 1
+    distribution: int_uniform
+  learning_rate :
+    max: 0.0001
+    min: 0.000001
