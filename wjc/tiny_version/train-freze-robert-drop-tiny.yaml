@@ -1,0 +1,42 @@
+method: bayes
+metric:
+  goal: maximize
+  name: eval/micro f1 score
+parameters:
+  # batch_size:
+  #   distribution: int_uniform
+  #   max: 50
+  #   min: 40
+  # epochs:
+  #   distribution: int_uniform
+  #   max: 10
+  #   min: 4
+  freeze:
+    distribution: int_uniform
+    max: 393
+    min: 150
+  gradient_accumulation_steps:
+    distribution: int_uniform
+    max: 1
+    min: 1
+  learning_rate:
+    distribution: uniform
+    max: 1e-04
+    min: 1e-05
+  hidden_dropout:
+    distribution: uniform
+    max: 0.105
+    min: 0.1
+  attention_dropout:
+    distribution: uniform
+    max: 0.115
+    min: 0.1
+  entity_marker:
+    values : 
+      - True
+    distribution: categorical
+  metric_for_best_model:
+    values:
+      - 'eval_micro f1 score'
+    distribution: categorical
+program: train-freze-robert-drop-tiny.py
