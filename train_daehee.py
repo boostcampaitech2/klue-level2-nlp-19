@@ -6,10 +6,14 @@ import sklearn
 import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
+from transformers.trainer_utils import SchedulerType
+from transformers.utils.dummy_pt_objects import get_cosine_with_hard_restarts_schedule_with_warmup
 from load_data import *
 from sklearn.model_selection import train_test_split
 from entity_marker import *
 import argparse
+from transformers.optimization import get_cosine_with_hard_restarts_schedule_with_warmup
+from entity_marker import *
 
 def klue_re_micro_f1(preds, labels):
     """KLUE-RE micro f1 (except no_relation)"""
@@ -69,21 +73,24 @@ def label_to_num(label):
 
 def train(args):
   # load model and tokenizer
-  MODEL_NAME = "monologg/koelectra-base-v3-discriminator"
+  MODEL_NAME = "klue/roberta-large"
   # MODEL_NAME = "klue/roberta-base"
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
-  # Augmentation 통해서 추가된 데이터입니다.
-  add_data = load_data("../dataset/train/addDataset.csv")
-  add_train, add_dev = train_test_split(add_data, stratify= add_data.label, test_size= 0.1, random_state=1004)
+  # # Augmentation 통해서 추가된 데이터입니다.
+  # add_data = load_data("../dataset/train/addDataset.csv")
+  # add_train, add_dev = train_test_split(add_data, stratify= add_data.label, test_size= 0.1, random_state=1004)
 
-  # load dataset
-  train_data = load_data("../dataset/train/train.csv")
-  train_dataset, dev_dataset = train_test_split(train_data, stratify= train_data.label, test_size= 0.1, random_state=1004)
+  # # load dataset
+  # train_data = load_data("../dataset/train/train.csv")
+  # train_dataset, dev_dataset = train_test_split(train_data, stratify= train_data.label, test_size= 0.1, random_state=1004)
 
-  # 기본 데이터셋에 Augmentation된 내용 추가
-  train_data = train_data.append(add_train, ignore_index=True)
-  # dev_dataset = dev_dataset.append(add_dev, ignore_index=True)
+  # # 기본 데이터셋에 Augmentation된 내용 추가
+  # train_data = train_data.append(add_train, ignore_index=True)
+  # # dev_dataset = dev_dataset.append(add_dev, ignore_index=True)
+  
+  train_dataset = load_data("./new_dataset/train.csv")
+  dev_dataset = load_data("./new_dataset/dev.csv")
 
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
@@ -91,8 +98,13 @@ def train(args):
   #  Entity marker
   # Example
   if args.entity_marker : 
+<<<<<<< HEAD
+    marked_train_dataset = load_data_marker("./new_dataset/train.csv")
+    marked_dev_dataset = load_data_marker("./new_dataset/dev.csv")
+=======
     marked_train_dataset = load_data_marker("../dataset/train/train.csv")
     marked_dev_dataset = load_data_marker("../dataset/train/dev.csv")
+>>>>>>> main
     concated_train_dataset=concat_entity_idx(train_dataset,marked_train_dataset)
     concated_dev_dataset=concat_entity_idx(dev_dataset,marked_dev_dataset)
     tokenized_train = marker_tokenized_dataset(concated_train_dataset,tokenizer)
@@ -113,10 +125,13 @@ def train(args):
   # setting model hyperparameter
   model_config =  AutoConfig.from_pretrained(MODEL_NAME)
   model_config.num_labels = 30
-
+  
   model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
   print(model.config)
-  model.parameters
+  
+  for params in list(model.parameters())[:-args.freeze]:
+    params.requires_grad = False
+  
   model.to(device)
   
   # 사용한 option 외에도 다양한 option들이 있습니다.
@@ -132,6 +147,9 @@ def train(args):
     per_device_eval_batch_size=args.batch_size,   # batch size for evaluation
     warmup_steps=500,                # number of warmup steps for learning rate scheduler
     weight_decay=args.weight_decay,               # strength of weight decay
+    gradient_accumulation_steps=args.accumul,
+    lr_scheduler_type=args.scheduler,
+    fp16=True,
     logging_dir='./logs',            # directory for storing logs
     logging_steps=100,              # log saving step.
     evaluation_strategy='steps', # evaluation strategy to adopt during training
@@ -141,7 +159,7 @@ def train(args):
     eval_steps = 500,            # evaluation step.
     load_best_model_at_end = True,
     report_to="wandb",
-    run_name= f"{MODEL_NAME.split('/')[-1]}-epoch{args.epoch}-batch{args.batch_size}-wd{args.weight_decay}-lr{args.learning_rate}"
+    run_name= f"{MODEL_NAME.split('/')[-1]}-scheduler[{args.scheduler}]-epoch{args.epoch}-batch{args.batch_size}-wd{args.weight_decay}-lr{args.learning_rate}-accuml{args.accumul}"
   )
 
   trainer = Trainer(
@@ -152,6 +170,12 @@ def train(args):
     compute_metrics=compute_metrics         # define metrics function
   )
 
+  if args.scheduler == 'cosine_with_restarts':
+    steps = (train_dataset.shape[0]//args.batch_size)*args.epoch
+    print('you choose cosine with restart')
+    optim = trainer.create_optimizer()
+    trainer.lr_scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(optimizer=optim,num_warmup_steps=0, num_training_steps=steps, num_cycles = 2)
+  
   # train model
   trainer.train()
   model.save_pretrained('./best_model')
@@ -159,12 +183,19 @@ def train(args):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
 
-  parser.add_argument('--epoch', type=int, default=10, help='number of epochs to train (default: 10)')
+  parser.add_argument('--epoch', type=int, default=4, help='number of epochs to train (default: 4)')
   parser.add_argument('--batch_size', type=int, default=64, help='size of batchs to train (default: 64)')
   parser.add_argument('--weight_decay', type=float, default=0.01, help='weight decay to train (default: 0.01)')
   parser.add_argument('--learning_rate', type=float, default=0.00001, help='learning rate to train (default: 1e-5)')
+<<<<<<< HEAD
+  parser.add_argument('--accumul', type=int, default=1, help='scheduler to train (default: linear)')
+  parser.add_argument('--scheduler', type=str, default="linear", help='accumulation step to train (default: 0)')
+  parser.add_argument('--entity_marker',default=True, help='entity marker option')
+  parser.add_argument('--freeze',type=int ,default=100, help='number of not freezing option')
+=======
 
   parser.add_argument('--entity_marker',default=False, help='entity marker option')
+>>>>>>> main
   args = parser.parse_args()
 
   # main()

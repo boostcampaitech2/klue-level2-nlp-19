@@ -4,7 +4,6 @@ import pandas as pd
 import torch
 import numpy as np
 from entity_marker import *
-
 class RE_Dataset(torch.utils.data.Dataset):
   """ Dataset 구성을 위한 class."""
   def __init__(self, pair_dataset, labels):
@@ -44,6 +43,8 @@ def load_data(dataset_dir):
 def tokenized_dataset(dataset, tokenizer):
   """ tokenizer에 따라 sentence를 tokenizing 합니다."""
   concat_entity = []
+  # if dataset['ob_type'] in dataset.columns :
+        
   for e01, e02 in zip(dataset['subject_entity'], dataset['object_entity']):
     temp = ''
     temp = e01 + '[SEP]' + e02
