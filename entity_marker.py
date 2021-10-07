@@ -100,8 +100,4 @@ def add_entity_mark(dataset):
         sentence.append(e1_before+entity_li[0]+type_li[0]+dataset.iloc[i][type_entity[0]]+type_li[0]+e1+entity_li[0]+between
                         +entity_li[1]+type_li[1]+dataset.iloc[i][type_entity[1]]+type_li[1]+e2+entity_li[1]+e2_after)
 
-<<<<<<< HEAD
     return sentence
-=======
-    return sentence
->>>>>>> 1c08bfae067e8d9d2b6b75fd6b96d5980f8a74ea
