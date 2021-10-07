@@ -97,15 +97,17 @@ def label_to_num(label):
 
 def train():
   # load model and tokenizer
+  MODEL_NAME = "klue/bert-base"
   # MODEL_NAME = "bert-base-uncased"
-  # MODEL_NAME = "klue/bert-base"
-  MODEL_NAME = "bert-base-uncased"
-  #tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+  # TOK_NAME = "klue/bert-base"
+  # TOK_NAME = "bert-base-uncased"
+  # tokenizer = AutoTokenizer.from_pretrained(TOK_NAME)
+  # tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
   tokenizer_dir = os.path.join("./resources", "mecab_sp-64k")
   mecab = MeCabTokenizer(os.path.join(tokenizer_dir, "tok.json")) 
   sp = SentencePieceTokenizer(os.path.join(tokenizer_dir, "tok.model"))
   custom_tokenizer = MeCabSentencePieceTokenizer(mecab, sp)
-  tokenizer = BertTokenizer(os.path.join(tokenizer_dir, "tok.vocab.txt"), custom_tokenizer)
+  tokenizer = BertTokenizer(os.path.join(tokenizer_dir, "readme.txt"), custom_tokenizer)
 
 
   # load dataset
@@ -132,8 +134,8 @@ def train():
   model_config.num_labels = 30
   model =  BertForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
   # print(model.config)
-  wandb.init(project="NLPproject", entity="chuchanghan")
-  wandb.init(project="NLPproject", config=model.config, name="BERT_10epoch_64batch_mecab-sp64")
+  wandb.init(project="NLPproject", entity="chuchanghan", name="klue/bert10e64b_mecab_sp_traindata")
+  wandb.init(project="NLPproject", config=model.config)
 
   model.resize_token_embeddings(tokenizer.vocab_size)
   model.parameters
@@ -149,7 +151,7 @@ def train():
     learning_rate=5e-5,               # learning_rate
     per_device_train_batch_size=64,  # batch size per device during training
     per_device_eval_batch_size=64,   # batch size for evaluation
-    warmup_steps=5000,                # number of warmup steps for learning rate scheduler
+    warmup_steps=500,                # number of warmup steps for learning rate scheduler
     weight_decay=0.01,               # strength of weight decay
     logging_dir='./logs',            # directory for storing logs
     logging_steps=100,              # log saving step.

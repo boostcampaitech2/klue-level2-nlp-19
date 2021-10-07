@@ -73,7 +73,7 @@ def main(args):
   Tokenizer_NAME = "klue/bert-base"
   #tokenizer = AutoTokenizer.from_pretrained(Tokenizer_NAME)
 
-  tokenizer_dir = os.path.join("./resources", "mecab_sp-64k")
+  tokenizer_dir = os.path.join("./resources", "mecab_sp-32k")
   mecab = MeCabTokenizer(os.path.join(tokenizer_dir, "tok.json")) 
   sp = SentencePieceTokenizer(os.path.join(tokenizer_dir, "tok.model"))
   custom_tokenizer = MeCabSentencePieceTokenizer(mecab, sp)
@@ -98,6 +98,7 @@ def main(args):
   ## make csv file with predicted answer
   #########################################################
   # 아래 directory와 columns의 형태는 지켜주시기 바랍니다.
+  print(output_prob)
   output = pd.DataFrame({'id':test_id,'pred_label':pred_answer,'probs':output_prob,})
 
   output.to_csv('./prediction/submission.csv', index=False) # 최종적으로 완성된 예측한 라벨 csv 파일 형태로 저장.
@@ -107,7 +108,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   
   # model dir
-  parser.add_argument('--model_dir', type=str, default="./results/checkpoint-2000")
+  parser.add_argument('--model_dir', type=str, default="./results/checkpoint-3000")
   args = parser.parse_args()
   print(args)
   main(args)
