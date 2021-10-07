@@ -12,6 +12,7 @@ from load_data import *
 from sklearn.model_selection import train_test_split
 import argparse
 from transformers.optimization import get_cosine_with_hard_restarts_schedule_with_warmup
+from entity_marker import *
 
 def klue_re_micro_f1(preds, labels):
     """KLUE-RE micro f1 (except no_relation)"""
@@ -93,9 +94,20 @@ def train(args):
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
 
+  #  Entity marker
+  # Example
+  if args.entity_marker : 
+    marked_train_dataset = load_data_marker("./new_dataset/train.csv")
+    marked_dev_dataset = load_data_marker("./new_dataset/dev.csv")
+    concated_train_dataset=concat_entity_idx(train_dataset,marked_train_dataset)
+    concated_dev_dataset=concat_entity_idx(dev_dataset,marked_dev_dataset)
+    tokenized_train = marker_tokenized_dataset(concated_train_dataset,tokenizer)
+    tokenized_dev = marker_tokenized_dataset(concated_dev_dataset,tokenizer)
+
   # tokenizing dataset
-  tokenized_train = tokenized_dataset(train_dataset, tokenizer)
-  tokenized_dev = tokenized_dataset(dev_dataset, tokenizer)
+  else:
+    tokenized_train = tokenized_dataset(train_dataset, tokenizer)
+    tokenized_dev = tokenized_dataset(dev_dataset, tokenizer)
 
   # make dataset for pytorch.
   RE_train_dataset = RE_Dataset(tokenized_train, train_label)
@@ -107,11 +119,13 @@ def train(args):
   # setting model hyperparameter
   model_config =  AutoConfig.from_pretrained(MODEL_NAME)
   model_config.num_labels = 30
-  # model_config.dropout = 
-  # model_config.
+  
   model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
   print(model.config)
-  model.parameters
+  
+  for params in list(model.parameters())[:-args.freeze]:
+    params.requires_grad = False
+  
   model.to(device)
   
   # 사용한 option 외에도 다양한 option들이 있습니다.
@@ -125,10 +139,11 @@ def train(args):
     learning_rate=args.learning_rate,               # learning_rate
     per_device_train_batch_size=args.batch_size,  # batch size per device during training
     per_device_eval_batch_size=args.batch_size,   # batch size for evaluation
-    warmup_steps=0,                # number of warmup steps for learning rate scheduler
+    warmup_steps=500,                # number of warmup steps for learning rate scheduler
     weight_decay=args.weight_decay,               # strength of weight decay
     gradient_accumulation_steps=args.accumul,
     lr_scheduler_type=args.scheduler,
+    fp16=True,
     logging_dir='./logs',            # directory for storing logs
     logging_steps=100,              # log saving step.
     evaluation_strategy='steps', # evaluation strategy to adopt during training
@@ -168,6 +183,8 @@ if __name__ == '__main__':
   parser.add_argument('--learning_rate', type=float, default=0.00001, help='learning rate to train (default: 1e-5)')
   parser.add_argument('--accumul', type=int, default=1, help='scheduler to train (default: linear)')
   parser.add_argument('--scheduler', type=str, default="linear", help='accumulation step to train (default: 0)')
+  parser.add_argument('--entity_marker',default=True, help='entity marker option')
+  parser.add_argument('--freeze',type=int ,default=100, help='number of not freezing option')
   args = parser.parse_args()
 
   # main()
