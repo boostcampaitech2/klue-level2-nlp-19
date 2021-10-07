@@ -1,15 +1,28 @@
 program: train.py
-name: name
-method: grid
+entity: covit19
+name: klue-roberta fp16
+method: bayes
 metric:
   name: eval/micro f1 score
   goal: maximize
 parameters:
   learning_rate:
-    values: [1e-5,5e-5]
+    distribution: uniform
+    min: 1e-5
+    max: 0.000035
   batch_size:
-    values: [16, 64]
-  epoch:
-    value: 10
+    distribution: int_uniform
+    min: 35
+    max: 50
   weight_decay:
-    values: [0.01, 0.05]
+    min: 0.022
+    max: 0.035
+  accumul:
+    value: 1
+  freeze:
+    min: 50
+    max: 200
+  entity_marker:
+    value: True
+  scheduler:
+    values: [linear, cosine]

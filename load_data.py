@@ -30,6 +30,7 @@ def preprocessing_dataset(dataset):
     object_entity.append(j)
   index = np.arange(len(dataset))
   out_dataset = pd.DataFrame({'index' : index,'id':dataset['id'], 'sentence':dataset['sentence'],'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
+  # out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':dataset['sentence'],'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
   return out_dataset
 
 def load_data(dataset_dir):
@@ -78,9 +79,6 @@ def marker_tokenized_dataset(dataset, tokenizer):
   
   # if "roberta" in tokenizer.name_or_path:
   #   tokenized_sentence=[]
-  
-  # abcd=0
-  # 2/abcd
   dataset = add_entity_mark(dataset)
   print('add_entity_mark')
   if "roberta" in tokenizer.name_or_path:
