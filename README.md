@@ -17,7 +17,6 @@ $ conda activate venv
 - pandas==1.1.5
 - scikit-learn~=0.24.1
 - transformers==4.10.0
-
 - fairseq
 - numpy
 - sentencepiece
@@ -34,29 +33,14 @@ $ pip install -r $ROOT/klue-level2-nlp-19/requirements.txt
 <br/>
 
 ## Function Description
-`main.py`: main module that combines and runs all other sub-modules
-
-`train.py`: trains the model by iterating through specific number of epochs
-
-`model.py`: EfficientNet model from [lukemelas](https://github.com/lukemelas/EfficientNet-PyTorch)
-
-`utils.py`: required by EfficientNet model
-
-`inference.py`: tests the model using the test dataset and outputs the inferred csv file
-
-`loss.py`: calculates loss using cross entropy and f1-score
-
-`label_smoothing_loss.py`: calculates loss using cross entropy with label smoothing and f1-score
-
-`dataset.py`: generates the dataset to feed the model to train
-
-`data_reset.py`: generates the image dataset divided into 18 classes (train and validation)
-
-`early_stopping.py`: Early Stopping function from [Bjarten](https://github.com/Bjarten/early-stopping-pytorch) (patience decides how many epochs to tolerate after val loss exceeds min. val loss)
-
-`transformation.py`: a group of transformation functions that can be claimed by args parser
-
-`dashboard.ipynb`: can observe the images with labels from the inferred csv files
+`train.py` - 지정해놓은 Argument들을 하이퍼파라미터로 Entity marker, Data augment, LR Scheduling 등을 학습할 수 있다.
+`inference.py` - 저장된 모델과  config파일을 바탕으로 Test data에 대한 예측 결과를 csv에 저장한다.
+`load_data.py` - Data를 불러오고 전처리 및 Tokenize 과정을 거칠 수 있도록 만든 Module이다.
+`entity_marker.py` - Add special token using punctual mark
+`new_model.py` - MLP layer followed by RobertaMaskedLM
+`EDA.ipynb` - Data Augmentation with Entity swapping and Easy Data Augmentation algorithms
+`RE_generator.ipynb` - Data Augmentation with Seq2Seq model(KoBART). Generating Sentences when Entities and relation is given.
+`ensemble.ipynb` - Ensemble with Soft Voting
 <br/><br/>
 
 ## USAGE
@@ -64,41 +48,42 @@ $ pip install -r $ROOT/klue-level2-nlp-19/requirements.txt
 
 - Before Data Generation:
 ```
-input
-└──data
-    ├──eval
-    |  ├──images/
-    |  └──info.csv
-    └──train
-        ├──images/
-        └──train.csv
+dataset
+├──train/
+|   └──train.csv
+└──test/
+    └──test.csv
 ```
 
-- Run python file to generate mask classification datasets
+- Run all of below jupyter notebook to generate datasets
 ```
-$ python data_reset.py
+$ python modify_csv.ipynb
+$ python EDA.ipynb
 ```
 
 - After Data Generation:
 ```
-input
-└──data
-    ├──eval
-    |  ├──images/
-    |  └──info.csv
-    └──train
-        ├──images/
-        ├──train_18class/
-        ├──val_18class/
-        └──train.csv
+dataset
+├──train/
+|   ├──addDataset.csv
+|   └──train.csv
+└──test/
+    └──test.csv
+
+new_dataset
+├──dev.csv
+└──train.csv
 ```
 
 ### 2. Model Training
 
-- Early stopping applied by (default) 
-
 ```
-$ python main.py
+$ python train.py \
+    --epoch = 4 \
+    --batch_size = 40\
+    --weight_decay = 0.01 \
+    --learning_rate = 0.00001 \
+    --entity_marker = True
 ```
 
 
@@ -106,18 +91,11 @@ $ python main.py
 ```
 $ python inference.py
 ```
-- Running the line above will generate submission.csv as below
+- Running the line above will generate submission.csv in prediction folder as below
 
 ```
-input
-└──data
-    ├──eval
-    |  ├──images/
-    |  ├──submission.csv
-    |  └──info.csv
-    └──train
-        ├──images/
-        ├──train_18class/
-        ├──val_18class/
-        └──train.csv
+prediction/
+├──.ipynb_checkpoints/
+├──sample_submission.csv
+└──submission.csv
 ```
