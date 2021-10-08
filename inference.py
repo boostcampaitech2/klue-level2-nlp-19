@@ -1,4 +1,5 @@
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments
+from tokenization import BertTokenizer
 from torch.utils.data import DataLoader
 from load_data import *
 import pandas as pd
@@ -9,6 +10,10 @@ import pickle as pickle
 import numpy as np
 import argparse
 from tqdm import tqdm
+
+from tokenizer.sentencepiece import SentencePieceTokenizer
+from tokenizer.mecab import MeCabTokenizer
+from tokenizer.mecab_sp import MeCabSentencePieceTokenizer
 
 def inference(model, tokenized_sent, device):
   """
@@ -97,6 +102,7 @@ def main(args):
   ## load my model
   MODEL_NAME = args.model_dir # model dir.
   model = AutoModelForSequenceClassification.from_pretrained(args.model_dir)
+  model.resize_token_embeddings(tokenizer.vocab_size)
   model.parameters
   model.to(device)
 
@@ -115,6 +121,7 @@ def main(args):
   ## make csv file with predicted answer
   #########################################################
   # 아래 directory와 columns의 형태는 지켜주시기 바랍니다.
+  print(output_prob)
   output = pd.DataFrame({'id':test_id,'pred_label':pred_answer,'probs':output_prob,})
 
   output.to_csv('./prediction/submission.csv', index=False) # 최종적으로 완성된 예측한 라벨 csv 파일 형태로 저장.
@@ -124,7 +131,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   
   # model dir
-  parser.add_argument('--model_dir', type=str, default="./best_model")
+  parser.add_argument('--model_dir', type=str, default="./results/checkpoint-3000")
   args = parser.parse_args()
   print(args)
   main(args)
