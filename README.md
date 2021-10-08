@@ -1,7 +1,9 @@
 # klue-level2-nlp-19
 
 ## Main Subject
-메인 주제
+Relation Extraction is a problem of predicting attributes and relationships for words in a sentence. Relationship extraction is a key component for building a knowledge graph, and is important in natural language processing applications such as structured search, emotional analysis, question answering, and summary.
+
+In this competition, we will learn a model that infers the relationship between words in sentences through information on sentences and words. Through this, our artificial intelligence model can understand the attributes and relationships of words and learn concepts.
 <br/><br/>
 
 ## Installation
@@ -12,23 +14,23 @@ $ conda create -n venv python=3.8.5 pip
 $ conda activate venv
 ```
 **2. Install other required packages**
-  - torch==1.7.1
-  - torchvision==0.8.2
-  - tensorboard==2.4.1
-  - pandas==1.1.5
-  - opencv-python==4.5.1.48
-  - scikit-learn~=0.24.1
-  - matplotlib==3.2.1
-  - albumentations==1.0.3
+- pandas==1.1.5
+- scikit-learn~=0.24.1
+- transformers==4.10.0
+
+- fairseq
+- numpy
+- sentencepiece
+- konlpy
 
 ```
-$ pip install -r $ROOT/image-classification-level1-30/requirements.txt
+$ pip install -r $ROOT/klue-level2-nlp-19/requirements.txt
 ```
 <br/>
 
 ## Classes for Classification
-- Three subclasses (mask, gender, and age) are combined to have a total of eighteen classes
-<img src=https://i.imgur.com/efDFm0m.png>
+- 30 Classes about relationship between two entities
+<img src=https://imgur.com/9wQ0g6Z.png>
 <br/>
 
 ## Function Description
@@ -119,6 +121,3 @@ input
         ├──val_18class/
         └──train.csv
 ```
-
-
-
