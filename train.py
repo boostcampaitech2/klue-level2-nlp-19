@@ -1,19 +1,15 @@
 import pickle as pickle
 import os
-import argparse
-
 import pandas as pd
 import torch
 import sklearn
 import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
-from sklearn.model_selection import train_test_split
-
 from load_data import *
+from sklearn.model_selection import train_test_split
 from entity_marker import *
-from new_model import SimpleModel
-
+import argparse
 
 def klue_re_micro_f1(preds, labels):
     """KLUE-RE micro f1 (except no_relation)"""
@@ -73,16 +69,21 @@ def label_to_num(label):
 
 def train(args):
   # load model and tokenizer
-  MODEL_NAME = "klue/roberta-large"
+  MODEL_NAME = "monologg/koelectra-base-v3-discriminator"
   # MODEL_NAME = "klue/roberta-base"
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
   # Augmentation 통해서 추가된 데이터입니다.
-  # add_data = load_data("../dataset/train/addDataset.csv")
+  add_data = load_data("../dataset/train/addDataset.csv")
+  add_train, add_dev = train_test_split(add_data, stratify= add_data.label, test_size= 0.1, random_state=1004)
 
   # load dataset
-  train_dataset = load_data("../dataset/train/train_dataset.csv")
-  dev_dataset = load_data("../dataset/train/dev_dataset.csv")
+  train_data = load_data("../dataset/train/train.csv")
+  train_dataset, dev_dataset = train_test_split(train_data, stratify= train_data.label, test_size= 0.1, random_state=1004)
+
+  # 기본 데이터셋에 Augmentation된 내용 추가
+  train_data = train_data.append(add_train, ignore_index=True)
+  # dev_dataset = dev_dataset.append(add_dev, ignore_index=True)
 
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
@@ -90,12 +91,12 @@ def train(args):
   #  Entity marker
   # Example
   if args.entity_marker : 
-    marked_train_dataset = load_data_marker("./new_dataset/train.csv")
-    marked_dev_dataset = load_data_marker("./new_dataset/dev.csv")
-    concated_train_dataset = concat_entity_idx(train_dataset, marked_train_dataset)
-    concated_dev_dataset = concat_entity_idx(dev_dataset, marked_dev_dataset)
-    tokenized_train = marker_tokenized_dataset(concated_train_dataset, tokenizer)
-    tokenized_dev = marker_tokenized_dataset(concated_dev_dataset, tokenizer)
+    marked_train_dataset = load_data_marker("../dataset/train/train.csv")
+    marked_dev_dataset = load_data_marker("../dataset/train/dev.csv")
+    concated_train_dataset=concat_entity_idx(train_dataset,marked_train_dataset)
+    concated_dev_dataset=concat_entity_idx(dev_dataset,marked_dev_dataset)
+    tokenized_train = marker_tokenized_dataset(concated_train_dataset,tokenizer)
+    tokenized_dev = marker_tokenized_dataset(concated_dev_dataset,tokenizer)
 
   # tokenizing dataset
   else:
@@ -110,11 +111,10 @@ def train(args):
 
   print(device)
   # setting model hyperparameter
-  model_config = AutoConfig.from_pretrained(MODEL_NAME)
+  model_config =  AutoConfig.from_pretrained(MODEL_NAME)
   model_config.num_labels = 30
 
-  # model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
-  model = SimpleModel(MODEL_NAME, config=model_config)
+  model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
   print(model.config)
   model.parameters
   model.to(device)
@@ -160,7 +160,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
 
   parser.add_argument('--epoch', type=int, default=10, help='number of epochs to train (default: 10)')
-  parser.add_argument('--batch_size', type=int, default=32, help='size of batchs to train (default: 64)')
+  parser.add_argument('--batch_size', type=int, default=64, help='size of batchs to train (default: 64)')
   parser.add_argument('--weight_decay', type=float, default=0.01, help='weight decay to train (default: 0.01)')
   parser.add_argument('--learning_rate', type=float, default=0.00001, help='learning rate to train (default: 1e-5)')
 
