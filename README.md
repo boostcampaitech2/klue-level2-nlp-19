@@ -33,17 +33,19 @@ $ pip install -r $ROOT/klue-level2-nlp-19/requirements.txt
 <br/>
 
 ## Function Description
-`train.py` - 지정해놓은 Argument들을 하이퍼파라미터로 Entity marker, Data augment, LR Scheduling 등을 학습할 수 있다.
+`train.py` - The designated Arguments can be hyperparameters to learn Entry marker, Data augment, LR Scheduling, etc.
 
-`inference.py` - 저장된 모델과  config파일을 바탕으로 Test data에 대한 예측 결과를 csv에 저장한다.
+`inference.py` - Based on the stored model and config file, the prediction result for the test data is stored in csv.
 
-`load_data.py` - Data를 불러오고 전처리 및 Tokenize 과정을 거칠 수 있도록 만든 Module이다.
+`load_data.py` - It is a module that allows data to be imported and preprocessed and tokenized.
 
-`entity_marker.py` - Add special token using punctual mark
+`entity_marker.py` - Add special token using punctual mark.
 
-`new_model.py` - MLP layer followed by RobertaMaskedLM
+`new_model.py` - MLP layer followed by RobertaMaskedLM.
 
-`EDA.ipynb` - Data Augmentation with Entity swapping and Easy Data Augmentation algorithms
+`modify_csv.ipynb` - Data deduplication.
+
+`EDA.ipynb` - Data Augmentation with Entity swapping and Easy Data Augmentation algorithms.
 
 `RE_generator.ipynb` - Data Augmentation with Seq2Seq model(KoBART). Generating Sentences when Entities and relation is given.
 
