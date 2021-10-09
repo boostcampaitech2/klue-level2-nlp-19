@@ -49,7 +49,7 @@ $ pip install -r $ROOT/klue-level2-nlp-19/requirements.txt
 
 `RE_generator.ipynb` - Data Augmentation with Seq2Seq model(KoBART). Generating Sentences when Entities and relation is given.
 
-`ensemble.ipynb` - Ensemble with Soft Voting
+`ensemble.ipynb` - Ensemble with Soft Voting.
 <br/><br/>
 
 ## USAGE
