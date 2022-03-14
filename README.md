@@ -10,8 +10,8 @@ In this competition, we will learn a model that infers the relationship between 
 **1. Set up the python environment:**
 - Recommended python version 3.8.5
 ```
-$ conda create -n venv python=3.8.5 pip
-$ conda activate venv
+ conda create -n venv python=3.8.5 pip
+ conda activate venv
 ```
 **2. Install other required packages**
 - pandas==1.1.5
@@ -23,7 +23,7 @@ $ conda activate venv
 - konlpy
 
 ```
-$ pip install -r $ROOT/klue-level2-nlp-19/requirements.txt
+ pip install -r $ROOT/klue-level2-nlp-19/requirements.txt
 ```
 <br/>
 
@@ -70,8 +70,8 @@ dataset
 
 - Run all of below jupyter notebook to generate datasets
 ```
-$ python modify_csv.ipynb
-$ python EDA.ipynb
+ python modify_csv.ipynb
+ python EDA.ipynb
 ```
 
 - After Data Generation:
@@ -91,7 +91,7 @@ new_dataset
 ### 2. Model Training
 
 ```
-$ python train.py \
+ python train.py \
     --epoch = 4 \
     --batch_size = 40\
     --weight_decay = 0.01 \
@@ -102,7 +102,7 @@ $ python train.py \
 
 ### 3. Inference
 ```
-$ python inference.py
+ python inference.py
 ```
 - Running the line above will generate submission.csv in prediction folder as below
 
