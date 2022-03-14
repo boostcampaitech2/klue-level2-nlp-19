@@ -4,12 +4,24 @@ import pandas as pd
 import torch
 import sklearn
 import numpy as np
-from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
-from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
-from load_data import *
-from sklearn.model_selection import train_test_split
-from entity_marker import *
 import argparse
+from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
+
+from transformers import AutoModel,AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
+from load_data import *
+
+''' Custom Import
+
+'''
+# from pytorch_lightning.loggers import WandbLogger
+from sklearn.model_selection import train_test_split
+import time
+import datetime
+import pytz
+from new_model import *
+# import wandb
+''' End
+'''
 
 def klue_re_micro_f1(preds, labels):
     """KLUE-RE micro f1 (except no_relation)"""
@@ -69,30 +81,65 @@ def label_to_num(label):
 
 def train(args):
   # load model and tokenizer
-  MODEL_NAME = "monologg/koelectra-base-v3-discriminator"
-  # MODEL_NAME = "klue/roberta-base"
+  # MODEL_NAME = "bert-base-uncased"
+  '''
+    Custom Argument
+    Start
+
+  '''
+  
+  # epochs=args.epochs
+  epochs=4
+  # bs = [16,32,64]
+  # batch_size = bs[np.random.choice(3)]
+  batch_size = args.batch_size
+
+  local_time = str(datetime.datetime.now(pytz.timezone('Asia/Seoul')))[:19]
+
+
+  learning_rate = args.learning_rate
+  freeze=args.freeze
+  # learning_rate = 3e-4
+  gradient_accumulation_steps = args.gradient_accumulation_steps
+  # dropout=args.dropout
+  save_dir= './results/{0}/epoch{1}_batch{2}(accum_batch{4})_lr_{3}_'.format(local_time,epochs,batch_size  ,
+                                                                         round(learning_rate,6)   ,gradient_accumulation_steps * batch_size)
+  
+  best_model = './best_model/epoch{0}_batch{1}(accum_batch{3})_lr_{2}_'.format(epochs,batch_size,
+                                                                         round(learning_rate,6)   ,gradient_accumulation_steps * batch_size)
+  '''
+
+
+    End
+
+  '''
+  MODEL_NAME = "klue/roberta-large"
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
-  # Augmentation 통해서 추가된 데이터입니다.
-  add_data = load_data("../dataset/train/addDataset.csv")
-  add_train, add_dev = train_test_split(add_data, stratify= add_data.label, test_size= 0.1, random_state=1004)
 
+  ''' 
+    Custom Code
+  '''
   # load dataset
-  train_data = load_data("../dataset/train/train.csv")
-  train_dataset, dev_dataset = train_test_split(train_data, stratify= train_data.label, test_size= 0.1, random_state=1004)
-
-  # 기본 데이터셋에 Augmentation된 내용 추가
-  train_data = train_data.append(add_train, ignore_index=True)
-  # dev_dataset = dev_dataset.append(add_dev, ignore_index=True)
-
+  # train_data = load_data("../dataset/train/train.csv")
+  # train_dataset, dev_dataset = train_test_split(train_data, stratify= train_data.label, test_size= 0.1, random_state=1004)
+  train_dataset = load_data("dataset/train/train.csv")
+  dev_dataset = load_data("dataset/train/dev_dataset.csv")
+  # train_dataset = load_data("./data/train.csv")
+  # dev_dataset = load_data("./data/valid.csv") # validation용 데이터는 따로 만드셔야 합니다.
+  ''' 
+    End
+  '''
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
 
-  #  Entity marker
-  # Example
+  # # tokenizing dataset
+  # tokenized_train = tokenized_dataset(train_dataset, tokenizer)
+  # tokenized_dev = tokenized_dataset(dev_dataset, tokenizer)
+
   if args.entity_marker : 
-    marked_train_dataset = load_data_marker("../dataset/train/train.csv")
-    marked_dev_dataset = load_data_marker("../dataset/train/dev.csv")
+    marked_train_dataset = load_data_marker("dataset/train/train.csv")
+    marked_dev_dataset = load_data_marker("dataset/train/dev_dataset.csv")
     concated_train_dataset=concat_entity_idx(train_dataset,marked_train_dataset)
     concated_dev_dataset=concat_entity_idx(dev_dataset,marked_dev_dataset)
     tokenized_train = marker_tokenized_dataset(concated_train_dataset,tokenizer)
@@ -102,7 +149,6 @@ def train(args):
   else:
     tokenized_train = tokenized_dataset(train_dataset, tokenizer)
     tokenized_dev = tokenized_dataset(dev_dataset, tokenizer)
-
   # make dataset for pytorch.
   RE_train_dataset = RE_Dataset(tokenized_train, train_label)
   RE_dev_dataset = RE_Dataset(tokenized_dev, dev_label)
@@ -113,37 +159,71 @@ def train(args):
   # setting model hyperparameter
   model_config =  AutoConfig.from_pretrained(MODEL_NAME)
   model_config.num_labels = 30
-
-  model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
+  model_config.hidden_dropout_prob=args.hidden_dropout
+  model_config.attention_probs_dropout_prob=args.attention_dropout
+  ''' 
+    Custom Code
+  '''
+  # model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
+  model = SimpleModel(MODEL_NAME,model_config)
   print(model.config)
   model.parameters
+  ''' 
+    Custom Code
+  '''
+  for ind, param in enumerate(list(model.parameters())[:-freeze]):
+    param.requires_grad=False
+  for ind, param in enumerate(list(model.parameters())):
+    if not param.requires_grad :
+      print("{0} layer is freezed".format(ind)) 
+  ''' 
+    End
+  '''
   model.to(device)
   
+  '''
+    Customizing]
+  '''
+
+  '''
+    End
+  '''
   # 사용한 option 외에도 다양한 option들이 있습니다.
   # https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments 참고해주세요.
-
   training_args = TrainingArguments(
-    output_dir='./results',          # output directory
+    output_dir=save_dir,          # output directory
     save_total_limit=5,              # number of total save model.
-    save_steps=500,                 # model saving step.
-    num_train_epochs=args.epoch,              # total number of training epochs
-    learning_rate=args.learning_rate,               # learning_rate
-    per_device_train_batch_size=args.batch_size,  # batch size per device during training
-    per_device_eval_batch_size=args.batch_size,   # batch size for evaluation
+    save_steps=600,                 # model saving step.
+    num_train_epochs=epochs,              # total number of training epochs
+    # learning_rate=5e-5,# learning_rate
+    learning_rate = learning_rate,
+    per_device_train_batch_size=batch_size,  # batch size per device during training
+    per_device_eval_batch_size=batch_size,   # batch size for evaluation
     warmup_steps=500,                # number of warmup steps for learning rate scheduler
-    weight_decay=args.weight_decay,               # strength of weight decay
+    weight_decay=0.01,               # strength of weight decay
     logging_dir='./logs',            # directory for storing logs
     logging_steps=100,              # log saving step.
     evaluation_strategy='steps', # evaluation strategy to adopt during training
                                 # `no`: No evaluation during training.
                                 # `steps`: Evaluate every `eval_steps`.
                                 # `epoch`: Evaluate every end of epoch.
-    eval_steps = 500,            # evaluation step.
-    load_best_model_at_end = True,
-    report_to="wandb",
-    run_name= f"{MODEL_NAME.split('/')[-1]}-epoch{args.epoch}-batch{args.batch_size}-wd{args.weight_decay}-lr{args.learning_rate}"
+    
+    eval_steps = 200,# evaluation step.
+    
+    # '''
+    #   Customizing Start
+    # '''
+    # eval_accumulation_steps = gradient_accumulation_steps,
+    gradient_accumulation_steps= gradient_accumulation_steps,
+    metric_for_best_model = args.metric_for_best_model,
+    report_to= None ,
+    run_name="robert-large-epochs:{0}-batch_size:{1},lr : {2},accum : {3}".format(epochs,batch_size,round(learning_rate,6),gradient_accumulation_steps),
+    # '''
+    #   End
+    # '''
+    load_best_model_at_end = True 
   )
-
+  
   trainer = Trainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
     args=training_args,                  # training arguments, defined above
@@ -154,18 +234,41 @@ def train(args):
 
   # train model
   trainer.train()
-  model.save_pretrained('./best_model')
+  # model.save_pretrained(best_model)
+def main(args):
+  train(args)
 
 if __name__ == '__main__':
+  
+  '''
+    Custom Code 
+    Start
+
+    using argparse to handle hyperparameter
+
+  '''
   parser = argparse.ArgumentParser()
+  # parser.add_argument('--epochs', type=int, default=10)
+  parser.add_argument('--batch_size', type=int)
 
-  parser.add_argument('--epoch', type=int, default=10, help='number of epochs to train (default: 10)')
-  parser.add_argument('--batch_size', type=int, default=64, help='size of batchs to train (default: 64)')
-  parser.add_argument('--weight_decay', type=float, default=0.01, help='weight decay to train (default: 0.01)')
-  parser.add_argument('--learning_rate', type=float, default=0.00001, help='learning rate to train (default: 1e-5)')
+  # parser.add_argument('--project_name', type=str)
+  parser.add_argument('--new_model', type=bool , default=False)
+  parser.add_argument('--gradient_accumulation_steps', type=int,default=1)
+  parser.add_argument('--learning_rate', type=float)
+  parser.add_argument('--freeze', type=int ,default  = 393)
+  parser.add_argument('--hidden_dropout', type=float  , default = 0.15)
+  parser.add_argument('--attention_dropout', type=float , default = 0.15)
+  parser.add_argument('--entity_marker', help='entity marker option',type=bool)
+  parser.add_argument('--metric_for_best_model', type=str, default= 'save/')
+  parser.add_argument('--weight_decay', type=float)
+  '''
 
-  parser.add_argument('--entity_marker',default=False, help='entity marker option')
+  Custom Code
+
+  End
+
+  '''
+
   args = parser.parse_args()
-
-  # main()
-  train(args)
+  print(args)
+  main(args)

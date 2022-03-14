@@ -93,11 +93,10 @@ new_dataset
 
 ```
  python train.py \
-    --epoch = 4 \
-    --batch_size = 40\
-    --weight_decay = 0.01 \
-    --learning_rate = 0.00001 \
-    --entity_marker = True
+    --batch_size  40\
+    --weight_decay  0.01 \
+    --learning_rate  0.00001 \
+    --entity_marker  True
 ```
 
 
