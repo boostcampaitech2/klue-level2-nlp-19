@@ -27,6 +27,10 @@ $ pip install -r $ROOT/klue-level2-nlp-19/requirements.txt
 ```
 <br/>
 
+## Dataset
+
+It's unusable due to copyright. You have to prepare your own data set.
+
 ## Classes for Classification
 - 30 Classes about relationship between two entities
 <img src=https://imgur.com/9wQ0g6Z.png>
